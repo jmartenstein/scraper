@@ -1,0 +1,15 @@
+--- 
+Skillet: 
+  url: http://www.skilletstreetfood.com
+  sub_nodes: 
+    date_node: //div[@class='weekly_feed']//div[@class='date']
+    content_node: //div[@class='weekly_feed']//p[@class='description_address']
+    address_node: //div[@class='weekly_feed']//p[@class='description_content']
+Marination: 
+  url: http://marinationmobile.com/locations
+  sub_nodes: 
+    date_node: //h3
+Here There Grill: 
+  url: http://hereandtheregrill.com/our-locations
+  sub_nodes: {}
+
