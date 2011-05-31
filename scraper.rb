@@ -15,32 +15,32 @@ require 'yaml'
 # what is an xpath and what is a regex
 
 site_parser = {
-	'Skillet' => {
-		'url'				=> 'http://www.skilletstreetfood.com',
-		'sub_nodes'		=> [
-			{ 'xpath' => "//div[@class='weekly_feed']//div[@class='date']" },
-			{ 'xpath' => "//div[@class='weekly_feed']//p[@class='description_address']" },
-			{ 'xpath' => "//div[@class='weekly_feed']//p[@class='description_content']" }
-		]
-	},
-	"Marination" => {
-		'url'				=> 'http://marinationmobile.com/locations',
-		'sub_nodes'		=> [
-			{ 'xpath' => '//h3' }
-		]
-	},
-	"Here There Grill" => {
-		'url'				=> 'http://hereandtheregrill.com/our-locations',
-		'sub_nodes'		=> [
-		]
-	}
+   'Skillet' => {
+      'url' => 'http://www.skilletstreetfood.com',
+      'sub_nodes' => [
+         { 'xpath' => "//div[@class='weekly_feed']//div[@class='date']" },
+         { 'xpath' => "//div[@class='weekly_feed']//p[@class='description_address']" },
+         { 'xpath' => "//div[@class='weekly_feed']//p[@class='description_content']" }
+      ]
+   },
+   "Marination" => {
+      'url'       => 'http://marinationmobile.com/locations',
+      'sub_nodes' => [
+         { 'xpath' => '//h3' }
+      ]
+   },
+   "Here There Grill" => {
+      'url'       => 'http://hereandtheregrill.com/our-locations',
+      'sub_nodes' => [
+      ]
+   }
 }
 
 
 # TODO: 
 #  1) Modify function to parse "sub-nodes"
-#	2) x Save data to yaml
-#	3) Migrate to truck class 	
+#  2) x Save data to yaml
+#  3) Migrate to truck class 	
 
 def parse(hash, name)
 
