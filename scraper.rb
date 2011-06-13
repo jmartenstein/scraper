@@ -3,9 +3,12 @@
 
 # scrapes food truck websites and reports back relevant scheduling info
 
+require 'rubygems'
+
 require 'timeout'
 require 'open-uri'
 require 'nokogiri'
+require 'gdata'
 require 'yaml'
 
 # add another layer (or infinite layers), so that we can search via
@@ -16,6 +19,7 @@ require 'yaml'
 
 site_parser = {
    'Skillet' => {
+      'parse' => 'html',
       'url' => 'http://www.skilletstreetfood.com',
       'sub_nodes' => [
          { 'xpath' => "//div[@class='weekly_feed']//div[@class='date']" },
@@ -24,14 +28,28 @@ site_parser = {
       ]
    },
    "Marination" => {
+      'parse'     => 'html',
       'url'       => 'http://marinationmobile.com/locations',
       'sub_nodes' => [
          { 'xpath' => '//h3' }
       ]
    },
    "Here There Grill" => {
+      'parse'     => 'html',
       'url'       => 'http://hereandtheregrill.com/our-locations',
       'sub_nodes' => [
+      ]
+   },
+   'Parfait' => {
+      'parse'        => 'gcal',
+      'url'          => 'https://www.google.com/calendar/feeds/parfait.icecream@gmail.com/public/basic',
+      'sub_nodes'    => [
+      ]
+   },
+   'Pai Foods' => {
+      'parse'        => 'gcal',
+      'url'          => 'https://www.google.com/calendar/feeds/pai@paifoods.com/public/basic',
+      'sub_nodes'    => [
       ]
    }
 }
@@ -42,7 +60,43 @@ site_parser = {
 #  2) x Save data to yaml
 #  3) Migrate to truck class 	
 
-def parse(hash, name)
+
+def parseGCal(hash, name)
+
+   # load the yaml file with auth info
+   account_yml = YAML.load(File.read('../scraper/account.yml'))
+
+   # initialize the client object, then send the login information
+   client = GData::Client::Calendar.new()
+   client.clientlogin(account_yml['username'], account_yml['password'])
+
+   daterange = "start-min=2011-06-12T00:00:00&start-max=2011-06-15T23:59:59"
+
+   # submit for the feed
+   feed = client.get(hash['url'] + "?" + daterange).to_xml
+
+   #puts feed.class
+
+   # just print info on the first entry for now
+   first = feed.elements['entry']
+
+   puts "Title: " + first.elements['title'].text
+   puts 
+   puts "Summary:"
+   puts first.elements['summary'].text
+
+   #
+   #feed.elements.each('entry') do |entry|
+   #   puts entry.elements['title'].text
+   #   puts entry.elements['summary'].text
+   #   puts
+   #end
+
+   #puts feed.elements.first
+
+end
+
+def parseHTML(hash, name)
 
    # grab the url for what the site's url, but timeout if the script
    # waits too long
@@ -94,6 +148,7 @@ def parse(hash, name)
          if i > 0
             if last_key_count > value_list.count
                $stderr.puts "WARNING: node count mismatch"
+i Foods
                $stderr.puts "current  count: value_list.count"
                $stderr.puts "previous count: #{last_key_count}"
             end
@@ -107,6 +162,7 @@ def parse(hash, name)
 
    end
 
+   # print out the parsed results
    (0 ... last_key_count).each do | i |
       csv_list = [name]
       list_list.each do | list |
@@ -123,14 +179,25 @@ end  # parse
 #puts site_parser
 #puts site_parser['Here There Grill']['url']
 
+# parse the calendar for Parfait Ice Cream
+#calendar = "Parfait Ice Cream Truck"
+
+#calendar_url = "https://www.google.com/calendar/feeds/pai@paifoods.com/public/basic?start-min=#{starttime}&start-max=#{endtime}"
+name = "Parfait"
+parseGCal(site_parser[name], name)
+
+# parse the Skillet website
 name = "Skillet"
-parse(site_parser[name], name)
+#parseHTML(site_parser[name], name)
+
+# parse the Here and There Grill website
 name = 'Here There Grill'
 #parse(site_parser[name], name)
-name = "Marination"
-parse(site_parser[name], name)
 
-#parse_marination()
+# parse the Marination Mobile website
+name = "Marination"
+parseHTML(site_parser[name], name)
+
 #parse_whereyaat()
 y = YAML::dump(site_parser)
 puts y
