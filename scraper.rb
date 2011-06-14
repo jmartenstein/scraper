@@ -173,14 +173,9 @@ i Foods
 
 end  # parse
 
-#file = './scraper.yml'
-#site_parser = YAML::load_file(file)
-
-#puts site_parser
-#puts site_parser['Here There Grill']['url']
-
-# parse the calendar for Parfait Ice Cream
-#calendar = "Parfait Ice Cream Truck"
+# open the scraper config file, load to a hash
+file = './scraper.yml'
+site_parser = YAML::load_file(file)
 
 #calendar_url = "https://www.google.com/calendar/feeds/pai@paifoods.com/public/basic?start-min=#{starttime}&start-max=#{endtime}"
 name = "Parfait"
@@ -188,7 +183,7 @@ parseGCal(site_parser[name], name)
 
 # parse the Skillet website
 name = "Skillet"
-#parseHTML(site_parser[name], name)
+parseHTML(site_parser[name], name)
 
 # parse the Here and There Grill website
 name = 'Here There Grill'
@@ -196,8 +191,5 @@ name = 'Here There Grill'
 
 # parse the Marination Mobile website
 name = "Marination"
-parseHTML(site_parser[name], name)
+#parseHTML(site_parser[name], name)
 
-#parse_whereyaat()
-y = YAML::dump(site_parser)
-puts y
