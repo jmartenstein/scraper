@@ -1,15 +1,28 @@
 --- 
 Skillet: 
+  parse: html
   url: http://www.skilletstreetfood.com
   sub_nodes: 
-    date_node: //div[@class='weekly_feed']//div[@class='date']
-    content_node: //div[@class='weekly_feed']//p[@class='description_address']
-    address_node: //div[@class='weekly_feed']//p[@class='description_content']
+  - xpath: //div[@class='weekly_feed']//div[@class='date']
+  - xpath: //div[@class='weekly_feed']//p[@class='description_address']
+  - xpath: //div[@class='weekly_feed']//p[@class='description_content']
 Marination: 
+  parse: html
   url: http://marinationmobile.com/locations
   sub_nodes: 
-    date_node: //h3
+  - xpath: //h3
 Here There Grill: 
+  parse: html
   url: http://hereandtheregrill.com/our-locations
-  sub_nodes: {}
+  sub_nodes: []
+
+Parfait: 
+  parse: gcal
+  url: https://www.google.com/calendar/feeds/parfait.icecream@gmail.com/public/basic
+  sub_nodes: []
+
+Pai Foods: 
+  parse: gcal
+  url: https://www.google.com/calendar/feeds/pai@paifoods.com/public/basic
+  sub_nodes: []
 
