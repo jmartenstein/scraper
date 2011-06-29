@@ -3,14 +3,21 @@ Skillet:
   parse: html
   url: http://www.skilletstreetfood.com
   sub_nodes: 
-  - xpath: //div[@class='weekly_feed']//div[@class='date']
-  - xpath: //div[@class='weekly_feed']//p[@class='description_address']
-  - xpath: //div[@class='weekly_feed']//p[@class='description_content']
+    - node:
+        - xpath: //div[@class='weekly_feed']//div[@class='date']
+    - node:
+        - xpath: //div[@class='weekly_feed']//p[@class='description_address']
+    - node:
+        - xpath: //div[@class='weekly_feed']//p[@class='description_content']
+
 Marination: 
   parse: html
   url: http://marinationmobile.com/locations
   sub_nodes: 
-  - xpath: //h3
+    - node:
+        - xpath: //h3
+        - regex: s/(\w+)\s-/$1/
+
 Here There Grill: 
   parse: html
   url: http://hereandtheregrill.com/our-locations

@@ -17,43 +17,6 @@ require 'yaml'
 # the additional layer will need to be a hash, so that we can designate
 # what is an xpath and what is a regex
 
-site_parser = {
-   'Skillet' => {
-      'parse' => 'html',
-      'url' => 'http://www.skilletstreetfood.com',
-      'sub_nodes' => [
-         { 'xpath' => "//div[@class='weekly_feed']//div[@class='date']" },
-         { 'xpath' => "//div[@class='weekly_feed']//p[@class='description_address']" },
-         { 'xpath' => "//div[@class='weekly_feed']//p[@class='description_content']" }
-      ]
-   },
-   "Marination" => {
-      'parse'     => 'html',
-      'url'       => 'http://marinationmobile.com/locations',
-      'sub_nodes' => [
-         { 'xpath' => '//h3' }
-      ]
-   },
-   "Here There Grill" => {
-      'parse'     => 'html',
-      'url'       => 'http://hereandtheregrill.com/our-locations',
-      'sub_nodes' => [
-      ]
-   },
-   'Parfait' => {
-      'parse'        => 'gcal',
-      'url'          => 'https://www.google.com/calendar/feeds/parfait.icecream@gmail.com/public/basic',
-      'sub_nodes'    => [
-      ]
-   },
-   'Pai Foods' => {
-      'parse'        => 'gcal',
-      'url'          => 'https://www.google.com/calendar/feeds/pai@paifoods.com/public/basic',
-      'sub_nodes'    => [
-      ]
-   }
-}
-
 
 # TODO: 
 #  1) Modify function to parse "sub-nodes"
@@ -61,10 +24,16 @@ site_parser = {
 #  3) Migrate to truck class 	
 
 
+class Scraper
+
+attr_accessor :parser_config
+
+### FUNCTIONS ###
+
 def parseGCal(hash, name)
 
    # load the yaml file with auth info
-   account_yml = YAML.load(File.read('../scraper/account.yml'))
+   account_yml = YAML.load(File.read('./config/account.yml'))
 
    # initialize the client object, then send the login information
    client = GData::Client::Calendar.new()
@@ -114,17 +83,21 @@ def parseHTML(hash, name)
 
    # initialize the hash to store all the values / strings retrieved
    # from the html document, and a few other housekeeping elements
-   list_list         = []
-   last_key_count    = 0
-   i                 = 0
+   list_list    = []
+   key_count    = 0
 
    # extract each of the sub nodes
    sub_nodes.each do | path_list |
+
+      last_key_count = 0
+      i = 0
 
       # if we actually want the second layer "node" to operate on a subset
       # of the document, then we will probably need to change the iterator
       # to some sort of recursive function
       @node = @doc
+
+      #puts path_list.first.inspect
 
       path_list.keys.each do | key |
 
@@ -135,22 +108,21 @@ def parseHTML(hash, name)
 
          if key == 'xpath'
             # do an xpath search for each of our nodes
-            @node.root.xpath(path).each do | element |
-               value_list.push(element.text)
-            end
+         elsif key == 'regex'
+            value_list.push('regex')
          end
 
-         # now store the list back into a (new) hash
+         # now store the list into a (new) hash
          list_list.push(value_list)
 
          # check to see if the current list is larger than the last one
-         # we checked; if it, throw a warning
+         # we checked; if it is, throw a warning
          if i > 0
-            if last_key_count > value_list.count
+            if last_key_count != value_list.count
                $stderr.puts "WARNING: node count mismatch"
-i Foods
-               $stderr.puts "current  count: value_list.count"
-               $stderr.puts "previous count: #{last_key_count}"
+               $stderr.puts "previous count : #{last_key_count}"
+               $stderr.puts "current count  : #{value_list.count}"
+               $stderr.puts "one of your parse paths is probably wrong"
             end
          end
 
@@ -158,12 +130,16 @@ i Foods
          last_key_count = value_list.count
          i = i + 1
 
+         #puts i
+         #puts last_key_count
+
       end
 
+      key_count = last_key_count
    end
 
    # print out the parsed results
-   (0 ... last_key_count).each do | i |
+   (0 ... key_count).each do | i |
       csv_list = [name]
       list_list.each do | list |
          csv_list.push(list[i])
@@ -173,23 +149,100 @@ i Foods
 
 end  # parse
 
-# open the scraper config file, load to a hash
-file = './scraper.yml'
-site_parser = YAML::load_file(file)
 
-#calendar_url = "https://www.google.com/calendar/feeds/pai@paifoods.com/public/basic?start-min=#{starttime}&start-max=#{endtime}"
-name = "Parfait"
-parseGCal(site_parser[name], name)
+def extract_via_xpath(xml_string, xpath_string)
+   
+   found_list = []
 
-# parse the Skillet website
-name = "Skillet"
-parseHTML(site_parser[name], name)
+   source_xml = Nokogiri::XML(xml_string)
 
-# parse the Here and There Grill website
-name = 'Here There Grill'
-#parse(site_parser[name], name)
+   source_xml.root.xpath(xpath_string).each do | element |
+      found_list.push(element.text)
+   end
 
-# parse the Marination Mobile website
-name = "Marination"
-#parseHTML(site_parser[name], name)
+   return found_list
 
+end  # def extract_via_xpath
+
+def extract_via_regex(source_string, regex_string)
+
+   rxp = Regexp::new(regex_string)
+   return source_string.gsub(rxp, '\1')
+
+end  # def extract_via_regex
+
+def parse_nodes(node_list, string)
+
+   temp_list = []
+   parsed_list = []
+
+   node_list.keys.each do | key |
+
+      if (key == "xpath") then
+         parsed_list = extract_via_xpath(string, node_list[key])
+      end
+
+      if (key == "regex") then
+
+         # if the list is empty, there probably wasn't an xpath,
+         if (parsed_list.empty?) 
+            parsed_list.push(string)
+         end
+
+         # go through the parsed list (either the list returned from 
+         # xpath, or the string, and run the regex against each
+         parsed_list.each do | item | 
+            temp_list.push(extract_via_regex(item, node_list[key]))
+         end
+
+         # now assign the temp_list back to the parsed_list
+         parsed_list = temp_list
+
+      end
+
+   end
+
+   return parsed_list
+
+end  # def parse_nodes
+
+def build_lists(sub_nodes, string)
+
+   sub_nodes_list = []
+   return_list = []
+
+   # first build a list of lists based on what comes back from
+   # the parse_nodes function
+   sub_nodes.each do | node |
+      sub_nodes_list.push(parse_nodes(node["node"],string))
+   end
+
+   key_count = sub_nodes_list[0].count
+
+   # now we want to pivot the list of lists
+   (0 ... key_count).each do | j |
+      temp_list = []
+      sub_nodes_list.each do | list |
+         temp_list.push(list[j])
+      end
+      return_list.push(temp_list)
+   end
+
+   return return_list
+
+end  # def build_lists
+
+def load(filename="./config/scraper.yml")
+   @parser_config = YAML::load_file(filename)
+end
+
+def load_from_config()
+end
+
+def initialize()
+
+   @parser_config = {}
+
+end # def initialize
+
+end  # class Scraper
